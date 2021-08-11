@@ -1,7 +1,20 @@
-int MIN_ORIGINAL_PEOPLE = 15;
-int MAX_ORIGINAL_PEOPLE = 35;
+int MIN_ORIGINAL_PEOPLE = 20;
+int MAX_ORIGINAL_PEOPLE = 30;
 int MIN_EXTRA_PEOPLE = 0;
-int MAX_EXTRA_PEOPLE = 5;
+int MAX_EXTRA_PEOPLE = 8;
+
+int LAYOUT_MEASUREMENT_MARGIN = 10; //pixels from edge
+int LAYOUT_MEASUREMENT_SPACING = 10; //pixels between cells
+int LAYOUT_TOP_PANEL_SIZE = 20; //pixels for top panel
+
+int TEXT_SIZE = 10;
+
+//calculated at start
+int layoutMeasurementCellWidth; //how wide a cell can be
+int layoutMeasurementCellHeight; //how tall a cell can be
+
+//dynamic
+float colorMagnification=0f;
 
 int count;
 Scenario[] scenarios;
@@ -26,7 +39,7 @@ class Scenario{
   private int extraAboveMin;
   private int originalAboveMin;
   private Player[] players;
-  private int raidsCompleted = 0;
+  public int raidsCompleted = 0;
   
   Scenario (int original, int extra){
     originalPeople = original;
@@ -56,7 +69,6 @@ class Scenario{
       }
     }   
     
-    //averagePayoff += random(-0.1f, +0.1f); //placeholder for visualization
     averagePayoff = (float) originalPlayerItems / (float) raidsCompleted / (float) originalPeople;
   }
   
@@ -94,17 +106,21 @@ class Scenario{
   void display(){
     color c1 = color(255,0,0);
     color c2 = color(0,255,0);
-    color c = lerpColor(c1,c2, 0.5f+(averagePayoff-0.2f)*1000f);
+    color c = lerpColor(c1,c2, 0.5f+(averagePayoff-0.2f)*colorMagnification);
     
     fill(c);
-    int x = 20 + extraAboveMin * 100;
-    int y = 20 + originalAboveMin * 25;
-    int xsize = 90;
-    int ysize = 15;
+    //layoutMeasurementCellWidth
+    int x = LAYOUT_MEASUREMENT_MARGIN + extraAboveMin * layoutMeasurementCellWidth + extraAboveMin * LAYOUT_MEASUREMENT_SPACING;
+    int y = LAYOUT_TOP_PANEL_SIZE + LAYOUT_MEASUREMENT_MARGIN + originalAboveMin * layoutMeasurementCellHeight + originalAboveMin * LAYOUT_MEASUREMENT_SPACING;
+    int xsize = layoutMeasurementCellWidth;
+    int ysize = layoutMeasurementCellHeight;
     rect(x,y,xsize,ysize);
     
     fill(0);
-    text(nf(averagePayoff, 0, 6), x+5, y+12);
+    textSize(TEXT_SIZE);
+    String outputText = nf(averagePayoff, 0, 6);
+    outputText += "\n" + originalPeople + "/" + extraPeople;
+    text(outputText, x+layoutMeasurementCellWidth/2-textWidth(outputText)/2, y+layoutMeasurementCellHeight/2-(TEXT_SIZE)/2);
   }
 }
 
@@ -123,13 +139,29 @@ void setup() {
       scenarios[index++] = new Scenario(y + MIN_ORIGINAL_PEOPLE,x + MIN_EXTRA_PEOPLE);
     }
   }
+  
+  //setup layout
+  layoutMeasurementCellWidth = (width - (2 * LAYOUT_MEASUREMENT_MARGIN) - ((MAX_EXTRA_PEOPLE-MIN_EXTRA_PEOPLE) * LAYOUT_MEASUREMENT_SPACING)) / (MAX_EXTRA_PEOPLE-MIN_EXTRA_PEOPLE+1);
+  layoutMeasurementCellHeight = (height - LAYOUT_TOP_PANEL_SIZE - (2 * LAYOUT_MEASUREMENT_MARGIN) - ((MAX_ORIGINAL_PEOPLE-MIN_ORIGINAL_PEOPLE) * LAYOUT_MEASUREMENT_SPACING)) / (MAX_ORIGINAL_PEOPLE-MIN_ORIGINAL_PEOPLE+1);
 }
 
 void draw() {
   background(0);
+  
+  colorMagnification = pow(10,(int)(max(min((float)mouseX / (float)width,width),0)*20));
+  
   for (Scenario sce : scenarios) {
-    for (int i = 0; i < 1000; i++)
+    for (int i = 0; i < 3000; i++)
     sce.update();
     sce.display();
   }
+  
+  fill(255);
+  textSize(TEXT_SIZE);
+  String outputText =  "Raids done: " + (scenarios[0].raidsCompleted/1000) + "K. Expected vs measured difference color magnification: " + colorMagnification;
+   text(outputText, LAYOUT_MEASUREMENT_MARGIN, LAYOUT_MEASUREMENT_MARGIN+(TEXT_SIZE)/2);
+}
+
+void mouseClicked(){
+  setup();
 }
