@@ -20,6 +20,6 @@ int MAX_EXTRA_PEOPLE = 5;
 
 These columns define what scenarios will be considered, the output will be cells that vertically match each possible amount (inclusive) of original player count and horizontally each possible amount of extra people. 
 
-##To-Do
+## To-Do
 * Prettier, more descriptive output
 * Randomness analysis
